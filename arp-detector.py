@@ -15,7 +15,6 @@ logging.basicConfig(filename='arp_detection.log',
 # Get the detector’s local IP so we ignore our own packets.
 LOCAL_IP = get_if_addr(conf.iface)
 
-# Enable or disable auto-blocking of attackers.
 AUTO_BLOCK = True
 blocked_macs = set()
 
@@ -86,13 +85,13 @@ class ARPRequestList:
     def __init__(self):
         self.head = None
         self.lock = threading.Lock()
-    
+
     def add_request(self, ip):
         with self.lock:
             node = ARPRequestNode(ip, datetime.datetime.now())
             node.next = self.head
             self.head = node
-            
+
     def find_request(self, ip, threshold=5):
         with self.lock:
             now = datetime.datetime.now()
@@ -102,7 +101,6 @@ class ARPRequestList:
                     return True
                 cur = cur.next
             return False
-            
     def cleanup(self, threshold=10):
         with self.lock:
             dummy = ARPRequestNode(None, datetime.datetime.now())
@@ -225,21 +223,21 @@ def detect_mitm():
 
 # ----------------- Main Function -----------------
 def main():
-    print("ARP Spoof Detector started. Monitoring ARP replies from all devices (excluding LOCAL_IP {}).".format(LOCAL_IP))
-    logging.info("ARP Spoof Detector started. Monitoring ARP replies (excluding LOCAL_IP {}).".format(LOCAL_IP))
-    
+    print("ARP poisoning Detector started. Monitoring ARP replies from all devices (excluding LOCAL_IP {}).".format(LOCAL_IP))
+    logging.info("ARP poisoning Detector started. Monitoring ARP replies (excluding LOCAL_IP {}).".format(LOCAL_IP))
+
     threading.Thread(target=sniff_requests, daemon=True).start()
     threading.Thread(target=sniff_replies, daemon=True).start()
     threading.Thread(target=arp_scan, daemon=True).start()
     threading.Thread(target=cleanup_requests, daemon=True).start()
     threading.Thread(target=detect_mitm, daemon=True).start()
-    
+
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        logging.info("ARP Spoof Detector Stopped.")
-        print("Stopping ARP Spoof Detector...")
+        logging.info("ARP poisoning Detector Stopped.")
+        print("Stopping ARP poisoning Detector...")
 
 if __name__ == "__main__":
     main()
